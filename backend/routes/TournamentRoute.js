@@ -5,7 +5,7 @@ const User = require("../models/UserModel");
 const Tournament = require("../models/TournamentModel");
 const Team = require("../models/TeamModel");
 const Match = require("../models/MatchModel");
-const PointsTable = require("../models/PointsTableModel");
+const PointsTable = require("../models/PointTableModel");
 const generateJoinCodes = require("../utils/generateJoinCodes");
 
 const protect = require("../middleware/authMiddleware");
@@ -94,15 +94,41 @@ router.get("/", async (req, res) => {
 
 });
 
+/* ================= GET ALL TOURNAMENTS FOR PARTICULAR USER ================= */
+router.get("/organizer/:id", protect, async (req, res) => {
+    try {
+        const tournaments = await Tournament.find({ createdBy: req.params.id })
+            .populate("createdBy", "name");
+
+        if (!tournaments) {
+            return res.status(404).json({
+                message: "Tournaments not found"
+            });
+        }
+
+        res.status(200).json(tournaments);
+    } catch (error) {
+
+        res.status(500).json({
+            message: "Server error"
+        });
+    }
+});
+
 
 /* ================= GET SINGLE TOURNAMENT ================= */
-router.get("/:id", async (req, res) => {
+router.get("/search/:id", async (req, res) => {
 
     try {
 
         const tournament = await Tournament.findById(req.params.id)
-            .populate("teams");
-
+            .populate({
+                path: "teams",
+                populate: {
+                    path: "captain",
+                    select: "name"
+                }
+            })
         if (!tournament) {
             return res.status(404).json({
                 message: "Tournament not found"
@@ -171,6 +197,7 @@ router.post("/:id/generate-codes", protect, async (req, res) => {
 
 });
 
+/* ================= RESET TOURNAMENT ================= */
 router.post("/:id/reset-codes", protect, async (req, res) => {
     try {
 
@@ -339,7 +366,9 @@ router.post("/join", protect, async (req, res) => {
 
 });
 
-router.delete("/:id", protect, async (req, res) => {
+
+/* ================= DELETE TOURNAMENT ================= */
+router.delete("/delete/:id", protect, async (req, res) => {
 
     try {
 

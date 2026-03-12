@@ -4,6 +4,7 @@ const router = express.Router();
 const Tournament = require("../models/TournamentModel");
 const Match = require("../models/MatchModel");
 const Schedule = require("../models/ScheduleModel");
+const PointsTable = require("../models/PointTableModel");
 
 const generateSchedule = require("../utils/generateSchedule");
 
@@ -140,6 +141,27 @@ router.post("/:id/generate-schedule", protect, async (req, res) => {
         tournament.scheduleGenerated = true;
         await tournament.save();
 
+        /* ================= CREATE INITIAL POINTS TABLE ================= */
+
+        const existingEntries = await PointsTable.find({
+            tournament: tournament._id
+        });
+
+        if (existingEntries.length === 0) {
+
+            const entries = tournament.teams.map(team => ({
+                tournament: tournament._id,
+                team: team._id,
+                played: 0,
+                won: 0,
+                lost: 0,
+                points: 0,
+                netrunrate: 0
+            }));
+
+            await PointsTable.insertMany(entries);
+
+        }
         res.status(201).json({
 
             message: "Schedule generated successfully",
@@ -184,6 +206,10 @@ router.post("/:id/reset-schedule", protect, async (req, res) => {
         /* ================= DELETE MATCHES ================= */
 
         await Match.deleteMany({
+            tournament: tournament._id
+        });
+
+        await PointsTable.deleteMany({
             tournament: tournament._id
         });
 

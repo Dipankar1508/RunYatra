@@ -1,5 +1,5 @@
 const Match = require("../models/MatchModel");
-const PointsTable = require("../models/PointsTableModel");
+const PointsTable = require("../models/PointTableModel");
 
 async function updatePointsTable(match) {
 

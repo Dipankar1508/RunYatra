@@ -38,4 +38,6 @@ const pointsTableSchema = new mongoose.Schema({
 
 });
 
+pointsTableSchema.index({ tournament: 1, team: 1 }, { unique: true });
+
 module.exports = mongoose.model("PointsTable", pointsTableSchema);

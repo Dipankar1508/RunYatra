@@ -47,7 +47,7 @@ router.post("/:id/update-result", protect, async (req, res) => {
     try {
 
         const {
-            result,
+            // result,
             resultSummary,
             teamARuns,
             teamAOvers,
@@ -55,14 +55,24 @@ router.post("/:id/update-result", protect, async (req, res) => {
             teamBOvers
         } = req.body;
 
-        const allowedResults = ["teamA", "teamB", "draw", "no_result"];
+        // const allowedResults = ["teamA", "teamB", "draw", "no_result"];
 
-        if (!allowedResults.includes(result)) {
+        // if (!allowedResults.includes(result)) {
+        //     return res.status(400).json({
+        //         message: "Invalid result type"
+        //     });
+        // }
+
+        if (
+            teamARuns == null ||
+            teamBRuns == null ||
+            teamAOvers == null ||
+            teamBOvers == null
+        ) {
             return res.status(400).json({
-                message: "Invalid result type"
+                message: "Score data required"
             });
         }
-
         const match = await Match.findById(req.params.id);
 
         if (!match) {
@@ -124,13 +134,13 @@ router.post("/:id/update-result", protect, async (req, res) => {
 
 
 
-        match.result = result;
+        // match.result = result;
         match.resultSummary = resultSummary;
         match.status = "completed";
 
 
         await match.save();
-        await updatePointsTable(match);
+        // await updatePointsTable(match);
         res.status(200).json({
             message: "Match result updated successfully"
         });

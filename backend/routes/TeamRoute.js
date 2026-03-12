@@ -77,9 +77,31 @@ router.get("/", async (req, res) => {
 
 });
 
+/* ================= GET ALL TEAM OF THAT PARTICULAR USER ================= */
+router.get("/my", protect, async (req, res) => {
+
+    try {
+
+        const teams = await Team.find({ captain: req.user._id })
+            .populate("captain", "name email")
+            .populate("tournament", "name");
+
+        res.status(200).json(teams);
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            message: "Server error"
+        });
+
+    }
+
+});
 
 /* ================= GET SINGLE TEAM ================= */
-router.get("/:id", async (req, res) => {
+router.get("/search/:id", async (req, res) => {
 
     try {
 

@@ -10,6 +10,7 @@ const TournamentRoute = require("./routes/TournamentRoute")
 const TeamRoute = require("./routes/TeamRoute")
 const ScheduleRoute = require("./routes/ScheduleRoute")
 const MatchRoute = require("./routes/MatchRoute")
+const PointTableRoute = require("./routes/PointTableRoute")
 
 const app = express();
 
@@ -38,6 +39,7 @@ app.use("/api/tournaments", TournamentRoute);
 app.use("/api/teams", TeamRoute);
 app.use("/api/schedules", ScheduleRoute);
 app.use("/api/matches", MatchRoute);
+app.use("/api/point-table", PointTableRoute);
 
 app.get("/", (req, res) => {
     res.json({ message: "RunYatra API Running " });
