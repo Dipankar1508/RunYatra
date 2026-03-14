@@ -37,9 +37,9 @@ mongoose
 app.use("/api/auth", AuthRoute);
 app.use("/api/tournaments", TournamentRoute);
 app.use("/api/teams", TeamRoute);
-app.use("/api/schedules", ScheduleRoute);
+app.use("/api/schedule", ScheduleRoute);
 app.use("/api/matches", MatchRoute);
-app.use("/api/point-table", PointTableRoute);
+app.use("/api/points-table", PointTableRoute);
 
 app.get("/", (req, res) => {
     res.json({ message: "RunYatra API Running " });

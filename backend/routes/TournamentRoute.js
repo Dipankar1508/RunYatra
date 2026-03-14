@@ -7,6 +7,7 @@ const Team = require("../models/TeamModel");
 const Match = require("../models/MatchModel");
 const PointsTable = require("../models/PointTableModel");
 const generateJoinCodes = require("../utils/generateJoinCodes");
+const generateTournamentCode = require("../utils/generateTournamentCode");
 
 const protect = require("../middleware/authMiddleware");
 
@@ -45,9 +46,10 @@ router.post("/create", protect, async (req, res) => {
                 message: "Rules must have an even number of teams"
             });
         }
-
+        const tournamentCode = generateTournamentCode();
         const tournament = await Tournament.create({
             name,
+            tournamentCode,
             createdBy: req.user._id,
             location,
             startDate,
@@ -253,6 +255,48 @@ router.post("/:id/reset-codes", protect, async (req, res) => {
     }
 });
 
+/* ================= SEARCH TOURNAMENT ================= */
+router.get("/find/:query", async (req, res) => {
+
+    try {
+
+        const query = req.params.query;
+
+        const tournaments = await Tournament.find({
+            $or: [
+                { tournamentCode: query.toUpperCase() },
+                { name: { $regex: query, $options: "i" } },
+                { location: { $regex: query, $options: "i" } }
+            ]
+        })
+            .populate({
+                path: "teams",
+                populate: {
+                    path: "captain",
+                    select: "name"
+                }
+            });
+
+        if (tournaments.length === 0) {
+            return res.status(404).json({
+                message: "No tournaments found"
+            });
+        }
+
+        res.status(200).json(tournaments);
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            message: "Server error"
+        });
+
+    }
+
+});
+
 
 /* ================= JOIN TOURNAMENT ================= */
 router.post("/join", protect, async (req, res) => {
@@ -406,6 +450,85 @@ router.delete("/delete/:id", protect, async (req, res) => {
 
         res.status(200).json({
             message: "Tournament deleted successfully"
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            message: "Server error"
+        });
+
+    }
+
+});
+
+
+/* ================= REMOVE TEAM FROM TOURNAMENT ================= */
+
+router.delete("/:tournamentId/team/:teamId", protect, async (req, res) => {
+
+    try {
+
+        const { tournamentId, teamId } = req.params;
+
+        const tournament = await Tournament.findById(tournamentId);
+
+        if (!tournament) {
+            return res.status(404).json({
+                message: "Tournament not found"
+            });
+        }
+
+        /* ONLY ORGANIZER CAN REMOVE TEAM */
+
+        if (tournament.createdBy.toString() !== req.user._id.toString()) {
+            return res.status(403).json({
+                message: "Only organizer can remove teams"
+            });
+        }
+
+        const team = await Team.findById(teamId);
+
+        if (!team) {
+            return res.status(404).json({
+                message: "Team not found"
+            });
+        }
+
+        /* CHECK TEAM IS IN THIS TOURNAMENT */
+
+        if (!tournament.teams.includes(teamId)) {
+            return res.status(400).json({
+                message: "Team not part of this tournament"
+            });
+        }
+
+        /* REMOVE TEAM FROM TOURNAMENT */
+
+        tournament.teams = tournament.teams.filter(
+            t => t.toString() !== teamId
+        );
+
+        /* FREE ONE JOIN CODE */
+
+        const usedCode = tournament.joinCodes.find(c => c.used === true);
+
+        if (usedCode) {
+            usedCode.used = false;
+        }
+
+        await tournament.save();
+
+        /* REMOVE TOURNAMENT FROM TEAM */
+
+        team.tournament = null;
+
+        await team.save();
+
+        res.status(200).json({
+            message: "Team removed from tournament"
         });
 
     } catch (error) {

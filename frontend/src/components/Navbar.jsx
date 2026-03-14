@@ -28,7 +28,7 @@ function Navbar() {
 
     if (user.role === "organizer") {
       navigate("/organizer-dashboard");
-    } else if (user.role === "captain") {
+    } else if (user.role === "user") {
       navigate("/team-dashboard");
     }
     // } else {

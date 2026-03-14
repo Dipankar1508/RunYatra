@@ -84,25 +84,31 @@ const matchSchema = new mongoose.Schema({
 
 }, { timestamps: true });
 
-matchSchema.pre("save", function (next) {
+matchSchema.pre("save", function () {
 
-    if (this.teamA.toString() === this.teamB.toString()) {
-        return next(new Error("A team cannot play against itself"));
+    if (this.teamA && this.teamB && this.teamA.toString() === this.teamB.toString()) {
+        throw new Error("A team cannot play against itself");
     }
-
-    next();
 
 });
 
 matchSchema.post("save", async function (doc) {
 
     if (doc.status === "completed") {
-
         await updatePointsTable(doc);
-
     }
 
 });
+
+// matchSchema.post("save", async function (doc) {
+
+//     if (doc.status === "completed") {
+
+//         await updatePointsTable(doc);
+
+//     }
+
+// });
 
 matchSchema.index({ tournament: 1 });
 

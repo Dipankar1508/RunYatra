@@ -8,6 +8,13 @@ const tournamentSchema = new mongoose.Schema(
             trim: true
         },
 
+        tournamentCode: {
+            type: String,
+            unique: true,
+            required: true,
+            uppercase: true
+        },
+
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
@@ -78,5 +85,6 @@ const tournamentSchema = new mongoose.Schema(
 
 tournamentSchema.index({ createdBy: 1 });
 tournamentSchema.index({ "joinCodes.code": 1 });
+// tournamentSchema.index({ tournamentCode: 1 }, { unique: true });
 
 module.exports = mongoose.model("Tournament", tournamentSchema);

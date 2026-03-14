@@ -3,7 +3,7 @@ const router = express.Router();
 
 const PointsTable = require('../models/PointTableModel');
 
-router.get("/:id/points-table", async (req, res) => {
+router.get("/:id", async (req, res) => {
 
     try {
         const { id } = req.params;

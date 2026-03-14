@@ -141,7 +141,15 @@ router.put("/:id/add-player", protect, async (req, res) => {
 
     try {
 
-        const { name, role } = req.body;
+        const {
+            name,
+            role,
+            age,
+            gender,
+            jerseyNumber,
+            battingStyle,
+            bowlingStyle
+        } = req.body;
 
         if (!name || !name.trim()) {
             return res.status(400).json({
@@ -188,7 +196,7 @@ router.put("/:id/add-player", protect, async (req, res) => {
         }
 
         const exists = team.players.find(
-            p => p.name.toLowerCase() === name.toLowerCase()
+            p => p.name.toLowerCase() === name.trim().toLowerCase()
         );
 
         if (exists) {
@@ -197,9 +205,24 @@ router.put("/:id/add-player", protect, async (req, res) => {
             });
         }
 
+        const jerseyExists = team.players.find(
+            p => p.jerseyNumber === jerseyNumber
+        );
+
+        if (jerseyExists) {
+            return res.status(400).json({
+                message: "Jersey numbers must be unique"
+            });
+        }
+
         team.players.push({
             name: name.trim(),
-            role
+            role: role || "batsman",
+            age,
+            gender,
+            jerseyNumber,
+            battingStyle,
+            bowlingStyle
         });
 
         await team.save();
@@ -222,6 +245,62 @@ router.put("/:id/add-player", protect, async (req, res) => {
 
 });
 
+/* ================= UPDATE CAPTAIN DETAILS ================= */
+
+router.put("/:id/captain-details", protect, async (req, res) => {
+
+    try {
+
+        const {
+            role,
+            age,
+            gender,
+            jerseyNumber,
+            battingStyle,
+            bowlingStyle
+        } = req.body;
+
+        const team = await Team.findById(req.params.id);
+
+        if (!team) {
+            return res.status(404).json({
+                message: "Team not found"
+            });
+        }
+
+        if (!team.captain.equals(req.user._id)) {
+            return res.status(403).json({
+                message: "Only captain can update captain details"
+            });
+        }
+
+        team.captainDetails = {
+            role,
+            age,
+            gender,
+            jerseyNumber,
+            battingStyle,
+            bowlingStyle
+        };
+
+        await team.save();
+
+        res.status(200).json({
+            message: "Captain details updated",
+            team
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            message: "Server error"
+        });
+
+    }
+
+});
 
 /* ================= REMOVE PLAYER ================= */
 router.delete("/:id/remove-player", protect, async (req, res) => {

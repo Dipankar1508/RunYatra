@@ -13,6 +13,9 @@ export default function TournamentManage() {
   const [tournament, setTournament] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [scheduleMode, setScheduleMode] = useState("");
+  const [matches, setMatches] = useState([]);
+  const [pointsTable, setPointsTable] = useState([]);
 
   const token = localStorage.getItem("token");
 
@@ -31,8 +34,10 @@ export default function TournamentManage() {
   const fetchTournament = async () => {
     try {
       const res = await axios.get(`${API_BASE_URL}/tournaments/search/${id}`);
-
+      console.log(res.data);
       setTournament(res.data);
+      fetchMatches();
+      fetchPointsTable();
     } catch (error) {
       console.error("Error loading tournament", error);
     } finally {
@@ -82,8 +87,76 @@ export default function TournamentManage() {
     }
   };
 
-  const generateSchedule = () => {
-    console.log("Schedule generation logic here");
+  const removeTeam = async (teamId) => {
+    try {
+      await axios.delete(`${API_BASE_URL}/tournaments/${id}/team/${teamId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      toast("Team removed", "success");
+
+      fetchTournament();
+    } catch (error) {
+      toast("Error removing team", "error");
+    }
+  };
+
+  const generateSchedule = async () => {
+    if (!scheduleMode) {
+      toast("Select schedule mode", "error");
+      return;
+    }
+
+    try {
+      await axios.post(
+        `${API_BASE_URL}/schedule/${id}/generate-schedule`,
+        { mode: scheduleMode },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+
+      toast("Schedule generated", "success");
+
+      fetchTournament();
+      fetchMatches();
+    } catch (error) {
+      toast(error.response?.data?.message || "Error generating schedule");
+    }
+  };
+
+  const resetSchedule = async () => {
+    try {
+      await axios.post(
+        `${API_BASE_URL}/schedule/${id}/reset-schedule`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+
+      toast("Schedule reset", "success");
+
+      fetchTournament();
+      fetchMatches();
+    } catch (error) {
+      toast("Error resetting schedule");
+    }
+  };
+  const fetchMatches = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/matches/tournament/${id}`);
+
+      setMatches(res.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const fetchPointsTable = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/points-table/${id}`);
+
+      setPointsTable(res.data);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   if (loading) return <div className="p-6">Loading...</div>;
@@ -215,16 +288,55 @@ export default function TournamentManage() {
 
       {tab === "teams" && (
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-          <h2 className="text-xl mb-4">Teams Joined</h2>
+          <h2 className="text-xl font-semibold mb-6">Teams Joined</h2>
 
           {tournament.teams?.length === 0 ? (
-            <p>No teams joined yet</p>
+            <div className="text-center py-10 text-gray-500">
+              No teams joined yet
+            </div>
           ) : (
-            <ul className="list-disc pl-6">
-              {tournament.teams?.map((team) => (
-                <li key={team._id}>{team.name}</li>
+            <div className="space-y-4">
+              {tournament.teams.map((team) => (
+                <div
+                  key={team._id}
+                  className="border rounded-lg dark:border-gray-600"
+                >
+                  {/* TEAM HEADER */}
+                  <div className="flex justify-between items-center p-4 bg-gray-100 dark:bg-gray-700">
+                    <div>
+                      <h3 className="font-semibold">{team.name}</h3>
+                      <p className="text-sm text-gray-500">
+                        Captain: {team.captain?.name}
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() => removeTeam(team._id)}
+                      className="px-3 py-1 bg-red-600 text-white rounded"
+                    >
+                      Remove
+                    </button>
+                  </div>
+
+                  {/* PLAYERS LIST */}
+                  <div className="p-4">
+                    <p className="font-semibold mb-2">Players</p>
+
+                    <ul className="space-y-1 text-sm">
+                      <li>
+                        <b>Captain:</b> {team.captain?.name}
+                      </li>
+
+                      {team.players.map((p, index) => (
+                        <li key={index}>
+                          {p.name} ({p.role})
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
               ))}
-            </ul>
+            </div>
           )}
         </div>
       )}
@@ -233,16 +345,65 @@ export default function TournamentManage() {
 
       {tab === "matches" && (
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-          <h2 className="text-xl mb-4">Matches</h2>
+          <h2 className="text-xl font-semibold mb-6">Tournament Schedule</h2>
 
-          <button
-            onClick={generateSchedule}
-            className="px-4 py-2 bg-purple-600 text-white rounded"
-          >
-            Generate Schedule
-          </button>
+          {!tournament.scheduleGenerated && (
+            <div className="flex flex-col sm:flex-row gap-3 mb-6">
+              <select
+                value={scheduleMode}
+                onChange={(e) => setScheduleMode(e.target.value)}
+                className="p-2 rounded border dark:bg-gray-700"
+              >
+                <option value="">Select Mode</option>
+                <option value="one_to_one">One vs One</option>
+                <option value="one_to_two">One vs Two</option>
+                <option value="one_to_three">One vs Three</option>
+                <option value="one_to_half">Half Teams</option>
+                <option value="one_to_all">Round Robin</option>
+              </select>
 
-          <p>Match schedule will appear here.</p>
+              <button
+                onClick={generateSchedule}
+                className="px-4 py-2 bg-purple-600 text-white rounded"
+              >
+                Generate Schedule
+              </button>
+            </div>
+          )}
+
+          {tournament.scheduleGenerated && (
+            <button
+              onClick={resetSchedule}
+              className="px-4 py-2 mb-6 bg-orange-500 text-white rounded"
+            >
+              Reset Schedule
+            </button>
+          )}
+
+          {/* Matches List */}
+
+          {matches.length === 0 ? (
+            <p>No matches generated yet</p>
+          ) : (
+            <div className="space-y-3">
+              {matches.map((match) => (
+                <div
+                  key={match._id}
+                  className="flex justify-between items-center
+            p-4 rounded border
+            bg-gray-100 dark:bg-gray-700"
+                >
+                  <div className="font-semibold">Match {match.matchNumber}</div>
+
+                  <div className="flex gap-3 items-center">
+                    <span>{match.teamA?.name}</span>
+                    <span className="font-bold">vs</span>
+                    <span>{match.teamB?.name}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -250,9 +411,40 @@ export default function TournamentManage() {
 
       {tab === "points" && (
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-          <h2 className="text-xl mb-4">Points Table</h2>
+          <h2 className="text-xl mb-4 font-semibold">Points Table</h2>
 
-          <p>Points table will appear here.</p>
+          {pointsTable.length === 0 ? (
+            <p>No data yet</p>
+          ) : (
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b">
+                  <th className="p-2">Team</th>
+                  <th className="p-2">Played</th>
+                  <th className="p-2">Won</th>
+                  <th className="p-2">Lost</th>
+                  <th className="p-2">Points</th>
+                  <th className="p-2">NRR</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {pointsTable.map((team, index) => (
+                  <tr key={team._id} className="border-b">
+                    <td className="p-2">
+                      {index + 1}. {team.team?.name}
+                    </td>
+
+                    <td className="p-2">{team.played}</td>
+                    <td className="p-2">{team.won}</td>
+                    <td className="p-2">{team.lost}</td>
+                    <td className="p-2">{team.points}</td>
+                    <td className="p-2">{team.netrunrate}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       )}
 

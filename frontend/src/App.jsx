@@ -15,9 +15,12 @@ import ProtectedRoute from "./context/ProtectedRoute";
 import PublicRoute from "./context/PublicRoute";
 
 import TeamDashboard from "./pages/dashboard/TeamDashboard";
+import CreateTeam from "./pages/team/CreateTeam";
+import TeamManager from "./pages/team/TeamManager";
 import OrganizerDashboard from "./pages/dashboard/OrganizerDashboard";
 import TournamentManage from "./pages/tournament/TournamentManage";
 import CreateTournament from "./pages/tournament/CreateTournament";
+import JoinTournament from "./pages/tournament/JoinTournament";
 
 function App() {
   return (
@@ -91,6 +94,33 @@ function App() {
           element={
             <ProtectedRoute>
               <TeamDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/create-team"
+          element={
+            <ProtectedRoute>
+              <CreateTeam />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/team/:id"
+          element={
+            <ProtectedRoute>
+              <TeamManager />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/join-tournament/:teamId"
+          element={
+            <ProtectedRoute>
+              <JoinTournament />
             </ProtectedRoute>
           }
         />

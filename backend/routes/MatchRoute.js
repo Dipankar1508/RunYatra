@@ -39,6 +39,31 @@ router.get("/:id", protect, async (req, res) => {
 
 });
 
+router.get("/tournament/:id", async (req, res) => {
+
+    try {
+
+        const matches = await Match.find({
+            tournament: req.params.id
+        })
+            .populate("teamA", "name")
+            .populate("teamB", "name")
+            .sort({ matchNumber: 1 });
+
+        res.status(200).json(matches);
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            message: "Server error"
+        });
+
+    }
+
+});
+
 
 /* ================= UPDATE MATCH RESULT ================= */
 
@@ -140,7 +165,7 @@ router.post("/:id/update-result", protect, async (req, res) => {
 
 
         await match.save();
-        // await updatePointsTable(match);
+        await updatePointsTable(match);
         res.status(200).json({
             message: "Match result updated successfully"
         });

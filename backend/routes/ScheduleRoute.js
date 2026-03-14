@@ -73,7 +73,7 @@ router.post("/:id/generate-schedule", protect, async (req, res) => {
                 break;
 
             case "one_to_half":
-                matchesPerTeam = teams.length / 2;
+                matchesPerTeam = Math.floor(teams.length / 2);
                 break;
 
             case "one_to_all":

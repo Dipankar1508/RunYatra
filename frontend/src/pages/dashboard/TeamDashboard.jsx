@@ -48,7 +48,7 @@ export default function TeamDashboard() {
 
       <button
         onClick={() => navigate("/create-team")}
-        className="px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg mb-6"
+        className="px-5 py-3 bg-orange-400 hover:bg-orange-600 text-white rounded-lg mb-6"
       >
         Create Team
       </button>
