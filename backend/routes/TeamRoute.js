@@ -53,7 +53,6 @@ router.post("/create", protect, async (req, res) => {
 
 });
 
-
 /* ================= GET ALL TEAMS ================= */
 router.get("/", async (req, res) => {
 
@@ -398,6 +397,28 @@ router.delete("/:id", protect, async (req, res) => {
 
     }
 
+});
+
+/* ================= GET TEAM BASIC INFO ================= */
+router.get("/:id/tournament-info", async (req, res) => {
+    try {
+
+        const team = await Team.findById(req.params.id)
+            .populate({
+                path: "tournament",
+                select: "name location startDate endDate rules"
+            });
+
+        if (!team) {
+            return res.status(404).json({ message: "Team not found" });
+        }
+
+        res.json(team.tournament);
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
+    }
 });
 
 

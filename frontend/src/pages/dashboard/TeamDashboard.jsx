@@ -3,6 +3,7 @@ import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../../utils/Config";
+import LoadingScreen from "../../components/LoadingScreen";
 
 export default function TeamDashboard() {
   const { user } = useAuth();
@@ -39,7 +40,7 @@ export default function TeamDashboard() {
   };
 
   if (loading) {
-    return <div className="p-6 text-center">Loading Teams...</div>;
+    return <LoadingScreen item="Team" />;
   }
 
   return (

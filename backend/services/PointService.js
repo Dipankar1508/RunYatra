@@ -1,9 +1,20 @@
 const Match = require("../models/MatchModel");
 const PointsTable = require("../models/PointTableModel");
 
-async function updatePointsTable(match) {
+
+async function updatePointsTable(match, totalOvers) {
 
     const tournamentId = match.tournament;
+
+    function convertOversToDecimal(overs) {
+
+        const parts = overs.toString().split(".");
+
+        const oversPart = parseInt(parts[0]) || 0;
+        const balls = parseInt(parts[1]) || 0;
+
+        return oversPart + balls / 6;
+    }
 
     const matches = await Match.find({
         tournament: tournamentId,
@@ -52,15 +63,35 @@ async function updatePointsTable(match) {
 
         /* RUN DATA FOR NRR */
 
+        // table[teamA].runsScored += m.teamARuns;
+        // table[teamA].runsConceded += m.teamBRuns;
+        // table[teamA].oversFaced += convertOversToDecimal(m.teamAOvers);
+        // table[teamA].oversBowled += convertOversToDecimal(m.teamBOvers);
+
+        // table[teamB].runsScored += m.teamBRuns;
+        // table[teamB].runsConceded += m.teamARuns;
+        // table[teamB].oversFaced += convertOversToDecimal(m.teamBOvers);
+        // table[teamB].oversBowled += convertOversToDecimal(m.teamAOvers);
+
+        /* RUN DATA FOR NRR */
+
+        const oversA = m.teamAAllOut
+            ? totalOvers
+            : convertOversToDecimal(m.teamAOvers);
+
+        const oversB = m.teamBAllOut
+            ? totalOvers
+            : convertOversToDecimal(m.teamBOvers);
+
         table[teamA].runsScored += m.teamARuns;
         table[teamA].runsConceded += m.teamBRuns;
-        table[teamA].oversFaced += m.teamAOvers;
-        table[teamA].oversBowled += m.teamBOvers;
+        table[teamA].oversFaced += oversA;
+        table[teamA].oversBowled += oversB;
 
         table[teamB].runsScored += m.teamBRuns;
         table[teamB].runsConceded += m.teamARuns;
-        table[teamB].oversFaced += m.teamBOvers;
-        table[teamB].oversBowled += m.teamAOvers;
+        table[teamB].oversFaced += oversB;
+        table[teamB].oversBowled += oversA;
 
         /* RESULT */
 

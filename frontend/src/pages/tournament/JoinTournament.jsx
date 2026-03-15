@@ -126,12 +126,12 @@ export default function JoinTournament() {
 
                 <p>
                   📅 <span className="font-medium">Start:</span>{" "}
-                  {new Date(tournament.startDate).toLocaleDateString()}
+                  {new Date(tournament.startDate).toLocaleDateString("en-GB")}
                 </p>
 
                 <p>
                   📅 <span className="font-medium">End:</span>{" "}
-                  {new Date(tournament.endDate).toLocaleDateString()}
+                  {new Date(tournament.endDate).toLocaleDateString("en-GB")}
                 </p>
 
                 <p>

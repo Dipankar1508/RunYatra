@@ -3,6 +3,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../../utils/Config";
 import axios from "axios";
+import LoadingScreen from "../../components/LoadingScreen";
 
 export default function OrganizerDashboard() {
   const { user } = useAuth();
@@ -35,7 +36,7 @@ export default function OrganizerDashboard() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
       // console.log("res.data:", res.data);
       const myTournaments = res.data;
@@ -57,7 +58,7 @@ export default function OrganizerDashboard() {
   };
 
   if (loading) {
-    return <div className="p-6 text-center text-lg">Loading Dashboard...</div>;
+    return <LoadingScreen item="Dashboard" />;
   }
 
   return (
@@ -105,8 +106,8 @@ export default function OrganizerDashboard() {
           t.status === "upcoming"
             ? "bg-blue-100 text-blue-600"
             : t.status === "ongoing"
-            ? "bg-green-100 text-green-600"
-            : "bg-gray-200 text-gray-600"
+              ? "bg-green-100 text-green-600"
+              : "bg-gray-200 text-gray-600"
         }`}
                 >
                   {t.status}

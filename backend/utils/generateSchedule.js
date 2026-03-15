@@ -8,46 +8,77 @@ function generateSchedule(teams, matchesPerTeam) {
         teamMatchCount[team._id] = 0;
     });
 
-    // generate all possible pairs
+    /* Generate all possible pairs */
+
     for (let i = 0; i < teams.length; i++) {
         for (let j = i + 1; j < teams.length; j++) {
-            pairs.push([teams[i], teams[j]]);
+            pairs.push({
+                teamA: teams[i]._id,
+                teamB: teams[j]._id
+            });
         }
     }
 
-    // Fisher-Yates shuffle
+    /* Shuffle pairs */
+
     for (let i = pairs.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [pairs[i], pairs[j]] = [pairs[j], pairs[i]];
     }
 
     let matchNumber = 1;
-    let lastTeams = [];
 
-    for (let [teamA, teamB] of pairs) {
+    for (let pair of pairs) {
+
+        const teamA = pair.teamA.toString();
+        const teamB = pair.teamB.toString();
 
         if (
-            teamMatchCount[teamA._id] < matchesPerTeam &&
-            teamMatchCount[teamB._id] < matchesPerTeam &&
-            !lastTeams.includes(teamA._id.toString()) &&
-            !lastTeams.includes(teamB._id.toString())
+            teamMatchCount[teamA] < matchesPerTeam &&
+            teamMatchCount[teamB] < matchesPerTeam
         ) {
 
             matches.push({
-                teamA: teamA._id,
-                teamB: teamB._id,
+                teamA,
+                teamB,
                 matchNumber
             });
 
-            teamMatchCount[teamA._id]++;
-            teamMatchCount[teamB._id]++;
-
-            lastTeams = [
-                teamA._id.toString(),
-                teamB._id.toString()
-            ];
-
+            teamMatchCount[teamA]++;
+            teamMatchCount[teamB]++;
             matchNumber++;
+        }
+    }
+
+    /* -------- Fix consecutive matches -------- */
+
+    for (let i = 1; i < matches.length; i++) {
+
+        const prev = matches[i - 1];
+        const curr = matches[i];
+
+        if (
+            prev.teamA === curr.teamA ||
+            prev.teamA === curr.teamB ||
+            prev.teamB === curr.teamA ||
+            prev.teamB === curr.teamB
+        ) {
+
+            for (let j = i + 1; j < matches.length; j++) {
+
+                const next = matches[j];
+
+                if (
+                    prev.teamA !== next.teamA &&
+                    prev.teamA !== next.teamB &&
+                    prev.teamB !== next.teamA &&
+                    prev.teamB !== next.teamB
+                ) {
+
+                    [matches[i], matches[j]] = [matches[j], matches[i]];
+                    break;
+                }
+            }
         }
     }
 

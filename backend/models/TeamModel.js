@@ -12,7 +12,40 @@ const teamSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "User"
     },
+    captainDetails: {
+        role: {
+            type: String,
+            enum: ["batsman", "bowler", "allrounder", "wicketkeeper"],
+            default: "batsman",
+        },
 
+        age: Number,
+
+        gender: {
+            type: String,
+            enum: ["male", "female", "other"],
+            default: "male",
+        },
+
+        jerseyNumber: {
+            type: Number,
+            min: 1,
+            max: 999,
+            default: () => Math.floor(Math.random() * 100) + 1
+        },
+
+        battingStyle: {
+            type: String,
+            enum: ["right-hand", "left-hand"],
+            default: "right-hand",
+        },
+
+        bowlingStyle: {
+            type: String,
+            enum: ["fast", "medium", "spin"],
+            default: "medium",
+        }
+    },
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User"

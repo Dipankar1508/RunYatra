@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const updatePointsTable = require("../services/PointService");
 const matchSchema = new mongoose.Schema({
 
     tournament: {
@@ -63,6 +62,12 @@ const matchSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+
+    teamAAllOut: {
+        type: Boolean,
+        default: false
+    },
+
     teamBRuns: {
         type: Number,
         default: 0
@@ -70,6 +75,10 @@ const matchSchema = new mongoose.Schema({
     teamBOvers: {
         type: Number,
         default: 0
+    },
+    teamBAllOut: {
+        type: Boolean,
+        default: false
     },
 
     result: {
@@ -92,23 +101,6 @@ matchSchema.pre("save", function () {
 
 });
 
-matchSchema.post("save", async function (doc) {
-
-    if (doc.status === "completed") {
-        await updatePointsTable(doc);
-    }
-
-});
-
-// matchSchema.post("save", async function (doc) {
-
-//     if (doc.status === "completed") {
-
-//         await updatePointsTable(doc);
-
-//     }
-
-// });
 
 matchSchema.index({ tournament: 1 });
 

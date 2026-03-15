@@ -138,6 +138,13 @@ router.post("/:id/update-result", protect, async (req, res) => {
         match.teamAOvers = teamAOvers;
         match.teamBRuns = teamBRuns;
         match.teamBOvers = teamBOvers;
+        if (teamAOvers < match.overs) {
+            match.teamAAllOut = true;
+        }
+
+        if (teamBOvers < match.overs) {
+            match.teamBAllOut = true;
+        }
 
         if (teamARuns > teamBRuns) {
             match.winningTeam = match.teamA;
@@ -163,9 +170,10 @@ router.post("/:id/update-result", protect, async (req, res) => {
         match.resultSummary = resultSummary;
         match.status = "completed";
 
+        let totalOvers = match.overs;
 
         await match.save();
-        await updatePointsTable(match);
+        await updatePointsTable(match, totalOvers);
         res.status(200).json({
             message: "Match result updated successfully"
         });

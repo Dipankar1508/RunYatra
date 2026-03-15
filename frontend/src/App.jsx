@@ -21,6 +21,7 @@ import OrganizerDashboard from "./pages/dashboard/OrganizerDashboard";
 import TournamentManage from "./pages/tournament/TournamentManage";
 import CreateTournament from "./pages/tournament/CreateTournament";
 import JoinTournament from "./pages/tournament/JoinTournament";
+import UpdateMatchResult from "./pages/matches/UpdateMatchResult";
 
 function App() {
   return (
@@ -121,6 +122,17 @@ function App() {
           element={
             <ProtectedRoute>
               <JoinTournament />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Match Routes */}
+
+        <Route
+          path="/matches/:id/update"
+          element={
+            <ProtectedRoute>
+              <UpdateMatchResult />
             </ProtectedRoute>
           }
         />

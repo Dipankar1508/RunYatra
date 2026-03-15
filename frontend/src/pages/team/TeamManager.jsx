@@ -5,8 +5,16 @@ import { API_BASE_URL } from "../../utils/Config";
 import { toast } from "../../utils/Toastify";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { motion } from "framer-motion";
+
+import TeamOverviewInfo from "./TeamOverviewInfo";
+import TeamOverViewRules from "../rules/TeamOverViewRules";
+import AddPlayerRules from "../rules/AddPlayerRules";
+import LoadingScreen from "../../components/LoadingScreen";
+
 import EditIcon from "@mui/icons-material/Edit";
-import AddIcon from "@mui/icons-material/Add";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 
 export default function TeamManager() {
   const { id } = useParams();
@@ -14,8 +22,10 @@ export default function TeamManager() {
   const token = localStorage.getItem("token");
 
   const [team, setTeam] = useState(null);
+  const [matches, setMatches] = useState([]);
+  const [pointsTable, setPointsTable] = useState([]);
 
-  const [tab, setTab] = useState("squad");
+  const [tab, setTab] = useState("overview");
 
   const [playerName, setPlayerName] = useState("");
   const [role, setRole] = useState("batsman");
@@ -27,9 +37,10 @@ export default function TeamManager() {
 
   const [editingCaptain, setEditingCaptain] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [canAddplayer, setCanAddPlayer] = useState(true);
 
   const tabs = [
-    { id: "squad", label: "Squad" },
+    { id: "overview", label: "Overview" },
     { id: "addPlayer", label: "Add Player" },
     { id: "schedule", label: "Schedule" },
     { id: "points", label: "Points Table" },
@@ -39,10 +50,26 @@ export default function TeamManager() {
     fetchTeam();
   }, []);
 
+  useEffect(() => {
+    if (!team) return;
+
+    if (tab === "schedule") {
+      fetchMatches();
+    }
+
+    if (tab === "points") {
+      fetchPointsTable();
+    }
+  }, [tab, team]);
+
   const fetchTeam = async () => {
     try {
       const res = await axios.get(`${API_BASE_URL}/teams/search/${id}`);
+      // console.log(res.data);
       setTeam(res.data);
+      if (res.data.tournament) {
+        setCanAddPlayer(false);
+      }
     } catch (error) {
       console.error(error);
     }
@@ -107,7 +134,7 @@ export default function TeamManager() {
       toast(res.data.message, "success");
 
       setEditingCaptain(false);
-      setTab("squad");
+      setTab("overview");
 
       fetchTeam();
     } catch (error) {
@@ -156,7 +183,31 @@ export default function TeamManager() {
     }
   };
 
-  if (!team) return <div className="p-6">Loading team...</div>;
+  const fetchMatches = async () => {
+    try {
+      const res = await axios.get(
+        `${API_BASE_URL}/matches/tournament/${team.tournament._id}`,
+      );
+      setMatches(res.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const fetchPointsTable = async () => {
+    try {
+      const res = await axios.get(
+        `${API_BASE_URL}/points-table/${team.tournament._id}`,
+      );
+      setPointsTable(res.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  if (!team) {
+    return <LoadingScreen item="Dashboard" />;
+  }
 
   return (
     <div className="min-h-screen p-6 bg-gray-100 dark:bg-gray-900">
@@ -207,89 +258,62 @@ export default function TeamManager() {
 
       {/* SQUAD TAB */}
 
-      {tab === "squad" && (
-        <div className="bg-white dark:bg-gray-800 dark:text-white p-6 rounded-lg shadow">
-          <h2 className="text-xl mb-4">Squad ({team.players.length + 1})</h2>
+      {tab === "overview" && (
+        <div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* LEFT SIDE INFO */}
+            <TeamOverviewInfo teamId={team?._id} />
 
-          <div className="mb-4 p-3 bg-purple-100 dark:bg-purple-900 rounded">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <p className="font-semibold">
-                  Captain: {team.captain.name} &nbsp;
-                  {team.captainDetails && (
-                    <span className="text-sm font-normal">
-                      ({team.captainDetails.role})
-                    </span>
-                  )}
-                </p>
+            {/* RIGHT SIDE SQUAD */}
+            <div className="bg-white dark:bg-gray-800 dark:text-white p-6 rounded-lg shadow">
+              {/* <h2 className="text-xl mb-4">Squad </h2> */}
+              <h2 className="text-xl font-semibold mb-4 border-b pb-2">
+                Squad Info ({team.players.length + 1})
+              </h2>
+              <div className="mb-4 p-3 bg-purple-100 dark:bg-purple-900 rounded">
+                <div className="flex justify-between items-center">
+                  <p className="font-semibold">Captain: {team.captain.name}</p>
+
+                  <button
+                    onClick={() => {
+                      setEditingCaptain(true);
+                      setTab("addPlayer");
+                    }}
+                    className="flex items-center gap-1 px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded text-sm"
+                  >
+                    <EditIcon fontSize="small" />
+                    <span className="hidden sm:block">Edit</span>
+                  </button>
+                </div>
               </div>
 
-              <button
-                onClick={() => {
-                  setEditingCaptain(true);
-                  setTab("addPlayer");
+              {team.players.length === 0 ? (
+                <p>No players added yet</p>
+              ) : (
+                <ul className="space-y-2">
+                  {team.players.map((p, index) => (
+                    <li
+                      key={index}
+                      className="flex justify-between items-center
+              p-3 bg-gray-100 dark:bg-gray-700 rounded"
+                    >
+                      <span>
+                        {p.name} ({p.role})
+                      </span>
 
-                  if (team.captainDetails) {
-                    setRole(team.captainDetails.role || "batsman");
-                    setAge(team.captainDetails.age || "");
-                    setGender(team.captainDetails.gender || "male");
-                    setJerseyNumber(team.captainDetails.jerseyNumber || "");
-                    setBattingStyle(
-                      team.captainDetails.battingStyle || "right-hand",
-                    );
-                    setBowlingStyle(
-                      team.captainDetails.bowlingStyle || "medium",
-                    );
-                  }
-                }}
-                className="flex items-center gap-1 px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded text-sm"
-              >
-                <span className="sm:hidden block">
-                  {team.captainDetails ? (
-                    <EditIcon fontSize="small" />
-                  ) : (
-                    <AddIcon fontSize="small" />
-                  )}
-                </span>
-                {/* Desktop Text */}
-                <span className="hidden sm:block ">
-                  {team.captainDetails ? "Edit Details" : "Add Details"}
-                </span>{" "}
-              </button>
+                      <button
+                        onClick={() => removePlayer(p.name)}
+                        className="px-3 py-1 bg-red-500 text-white rounded"
+                      >
+                        Remove
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
-
-          {team.players.length === 0 ? (
-            <p>No players added yet</p>
-          ) : (
-            <ul className="space-y-2">
-              {team.players.map((p, index) => (
-                <li
-                  key={index}
-                  className="flex justify-between items-center
-                  p-3 bg-gray-100 dark:bg-gray-700 rounded"
-                >
-                  <span>
-                    {p.name} ({p.role})
-                  </span>
-                  {/* Mobile dustbin */}
-                  <button
-                    onClick={() => removePlayer(p.name)}
-                    className="text-red-500 block sm:hidden"
-                  >
-                    <DeleteIcon />
-                  </button>
-                  {/* Desktop button */}
-                  <button
-                    onClick={() => removePlayer(p.name)}
-                    className="px-3 py-1 bg-red-500 text-white rounded hidden sm:block"
-                  >
-                    Remove
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
+          <TeamOverViewRules />
         </div>
       )}
 
@@ -372,39 +396,211 @@ export default function TeamManager() {
               </select>
             </div>
           </div>
+          {canAddplayer ? (
+            <button
+              onClick={() => {
+                if (editingCaptain) {
+                  saveCaptainDetails();
+                } else {
+                  addPlayer();
+                }
+              }}
+              className="mt-5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded w-full sm:auto"
+            >
+              {editingCaptain ? "Save Captain Details" : "Add Player"}
+            </button>
+          ) : (
+            <p className="text-red-500 text-sm mt-4 text-center">
+              Tournament has already started. Players cannot be added.
+            </p>
+          )}
 
-          <button
-            onClick={() => {
-              if (editingCaptain) {
-                saveCaptainDetails();
-              } else {
-                addPlayer();
-              }
-            }}
-            className="mt-5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded w-full sm:auto"
-          >
-            {editingCaptain ? "Save Captain Details" : "Add Player"}
-          </button>
+          <div className="mt-5">
+            <AddPlayerRules />
+          </div>
         </div>
       )}
 
       {/* SCHEDULE TAB */}
 
       {tab === "schedule" && (
-        <div className="bg-white dark:bg-gray-800 dark:text-white p-6 rounded-lg shadow">
-          <h2 className="text-xl mb-4">Team Schedule</h2>
+        <div className="bg-white dark:bg-gray-800 dark:text-white p-6 rounded-xl shadow-xl ">
+          <h2 className="text-2xl font-semibold mb-6">Tournament Schedule</h2>
 
-          <p>No matches scheduled yet.</p>
+          {/* Matches */}
+
+          {matches.length === 0 ? (
+            <p className="text-gray-500">No matches generated yet</p>
+          ) : (
+            <div className="space-y-6">
+              {matches.map((match) => (
+                <div
+                  key={match._id}
+                  className="
+                    rounded-xl
+                    border border-gray-200 dark:border-gray-700
+                    bg-white dark:bg-gray-800
+                    p-5
+                    shadow-md hover:shadow-lg
+                    transition-all
+                    "
+                >
+                  {/* Top Control Bar */}
+
+                  <div className="flex items-center justify-between mb-5">
+                    <span className="text-xs sm:text-sm font-semibold text-gray-500 dark:text-gray-400">
+                      Match {match.matchNumber}
+                    </span>
+
+                    <div className="flex items-center gap-2">
+                      {/* Status */}
+
+                      <span
+                        className={`flex items-center justify-center gap-1
+                        h-8 px-3 text-xs font-semibold rounded-md
+                        ${
+                          match.status === "completed"
+                            ? "bg-green-500 text-white"
+                            : match.status === "live"
+                              ? "bg-yellow-400 text-black"
+                              : "bg-blue-500 text-white"
+                        }`}
+                      >
+                        {match.status === "completed" && (
+                          <CheckCircleIcon sx={{ fontSize: 16 }} />
+                        )}
+
+                        {match.status === "live" && (
+                          <FiberManualRecordIcon sx={{ fontSize: 14 }} />
+                        )}
+
+                        {match.status === "scheduled" && (
+                          <AccessTimeIcon sx={{ fontSize: 16 }} />
+                        )}
+
+                        <span className="hidden sm:inline">
+                          {match.status.toUpperCase()}
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Teams Section */}
+
+                  <div className="grid grid-cols-3 items-center text-center gap-2">
+                    {/* Team A */}
+
+                    <div className="flex flex-col items-center justify-center">
+                      <div className="hidden sm:flex w-12 h-12 items-center justify-center rounded-full bg-indigo-600 text-white font-bold text-lg">
+                        {match.teamA?.name?.[0]}
+                      </div>
+
+                      <p className="mt-2 text-sm sm:text-base font-semibold leading-tight">
+                        {match.teamA?.name}
+                      </p>
+                    </div>
+
+                    {/* VS */}
+
+                    <div className="flex justify-center items-center">
+                      <span className="text-purple-600 font-bold text-lg sm:text-xl">
+                        VS
+                      </span>
+                    </div>
+
+                    {/* Team B */}
+
+                    <div className="flex flex-col items-center justify-center">
+                      <div className="hidden sm:flex w-12 h-12 items-center justify-center rounded-full bg-indigo-600 text-white font-bold text-lg">
+                        {match.teamB?.name?.[0]}
+                      </div>
+
+                      <p className="mt-2 text-sm sm:text-base font-semibold leading-tight max-w-30 wrap-break-words">
+                        {match.teamB?.name}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
       {/* POINTS TAB */}
 
       {tab === "points" && (
-        <div className="bg-white dark:bg-gray-800 dark:text-white p-6 rounded-lg shadow">
-          <h2 className="text-xl mb-4">Points Table</h2>
+        <div className="bg-white dark:bg-gray-800 dark:text-white p-4 rounded-xl shadow-lg">
+          <h2 className="text-lg mb-3 font-semibold text-gray-800 dark:text-gray-100">
+            Points Table
+          </h2>
 
-          <p>Points table will appear here.</p>
+          {pointsTable.length === 0 ? (
+            <p className="text-gray-500">No data yet</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[330px] border-collapse text-xs sm:text-sm">
+                {/* Header */}
+                <thead>
+                  <tr className="bg-purple-600 text-white">
+                    <th className="px-2 py-2 text-left">Team</th>
+                    <th className="px-2 py-2 text-center">P</th>
+                    <th className="px-2 py-2 text-center">W</th>
+                    <th className="px-2 py-2 text-center">L</th>
+                    <th className="px-2 py-2 text-center">Pts</th>
+                    <th className="px-2 py-2 text-center">NRR</th>
+                  </tr>
+                </thead>
+
+                {/* Body */}
+                <tbody>
+                  {pointsTable.map((team, index) => (
+                    <tr
+                      key={team._id}
+                      className={`
+                  border-b
+                  hover:bg-purple-50
+                  dark:hover:bg-gray-700
+                  ${
+                    index % 2 === 0
+                      ? "bg-gray-50 dark:bg-gray-900"
+                      : "bg-white dark:bg-gray-800"
+                  }
+                `}
+                    >
+                      <td className="px-2 py-2 font-medium">
+                        {index + 1}. {team.team?.name}
+                      </td>
+
+                      <td className="px-2 py-2 text-center">{team.played}</td>
+
+                      <td className="px-2 py-2 text-center text-green-600 font-semibold">
+                        {team.won}
+                      </td>
+
+                      <td className="px-2 py-2 text-center text-red-500">
+                        {team.lost}
+                      </td>
+
+                      <td className="px-2 py-2 text-center font-bold text-purple-600">
+                        {team.points}
+                      </td>
+
+                      <td
+                        className={`px-2 py-2 text-center font-semibold ${
+                          team.netrunrate >= 0
+                            ? "text-green-600"
+                            : "text-red-500"
+                        }`}
+                      >
+                        {team.netrunrate}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 

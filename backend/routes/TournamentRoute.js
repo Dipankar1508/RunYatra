@@ -120,9 +120,7 @@ router.get("/organizer/:id", protect, async (req, res) => {
 
 /* ================= GET SINGLE TOURNAMENT ================= */
 router.get("/search/:id", async (req, res) => {
-
     try {
-
         const tournament = await Tournament.findById(req.params.id)
             .populate({
                 path: "teams",
@@ -130,7 +128,8 @@ router.get("/search/:id", async (req, res) => {
                     path: "captain",
                     select: "name"
                 }
-            })
+            });
+
         if (!tournament) {
             return res.status(404).json({
                 message: "Tournament not found"
@@ -141,12 +140,13 @@ router.get("/search/:id", async (req, res) => {
 
     } catch (error) {
 
+        console.error(error);
+
         res.status(500).json({
             message: "Server error"
         });
 
     }
-
 });
 
 
@@ -295,6 +295,48 @@ router.get("/find/:query", async (req, res) => {
 
     }
 
+});
+
+/* ================= UPDATE TOURNAMENT STATUS ================= */
+
+router.patch("/:id/status", protect, async (req, res) => {
+    try {
+
+        const { status } = req.body;
+
+        const tournament = await Tournament.findById(req.params.id);
+
+        if (!tournament) {
+            return res.status(404).json({
+                message: "Tournament not found"
+            });
+        }
+
+        // Only organizer can change status
+        if (tournament.createdBy.toString() !== req.user._id.toString()) {
+            return res.status(403).json({
+                message: "Not authorized"
+            });
+        }
+
+        tournament.status = status;
+
+        await tournament.save();
+
+        res.status(200).json({
+            message: "Tournament status updated",
+            status: tournament.status
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        res.status(500).json({
+            message: "Server error"
+        });
+
+    }
 });
 
 
