@@ -68,6 +68,32 @@ const tournamentSchema = new mongoose.Schema(
             default: false
         },
 
+        currentStage: {
+            type: String,
+            enum: ["group", "semi_final", "final", "completed"],
+            default: "group"
+        },
+
+        groupStageCompleted: {
+            type: Boolean,
+            default: false
+        },
+
+        semiFinalGenerated: {
+            type: Boolean,
+            default: false
+        },
+
+        semiFinalCompleted: {
+            type: Boolean,
+            default: false
+        },
+
+        finalGenerated: {
+            type: Boolean,
+            default: false
+        },
+
         winner: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Team"

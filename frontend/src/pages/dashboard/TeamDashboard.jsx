@@ -72,9 +72,11 @@ export default function TeamDashboard() {
               </p>
 
               {team.tournament ? (
-                <p className="text-green-500 mt-2">
-                  Tournament: {team.tournament?.name || "Not Joined"}
-                </p>
+                <div className="mt-2 space-y-3">
+                  <p className="text-green-500">
+                    Tournament: {team.tournament?.name || "Not Joined"}
+                  </p>
+                </div>
               ) : (
                 <button
                   onClick={() => navigate(`/join-tournament/${team._id}`)}
@@ -84,12 +86,14 @@ export default function TeamDashboard() {
                 </button>
               )}
 
-              <button
-                onClick={() => navigate(`/team/${team._id}`)}
-                className="mt-3 ml-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded"
-              >
-                Manage
-              </button>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  onClick={() => navigate(`/team/${team._id}`)}
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded"
+                >
+                  Manage
+                </button>
+              </div>
             </div>
           ))}
         </div>

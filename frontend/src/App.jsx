@@ -13,6 +13,7 @@ import ChangePassword from "./pages/auth/ChangePassword";
 
 import ProtectedRoute from "./context/ProtectedRoute";
 import PublicRoute from "./context/PublicRoute";
+import RoleRoute from "./context/RoleRoute";
 
 import TeamDashboard from "./pages/dashboard/TeamDashboard";
 import CreateTeam from "./pages/team/CreateTeam";
@@ -65,27 +66,27 @@ function App() {
         <Route
           path="/organizer-dashboard"
           element={
-            <ProtectedRoute>
+            <RoleRoute allowedRoles={["organizer"]}>
               <OrganizerDashboard />
-            </ProtectedRoute>
+            </RoleRoute>
           }
         />
 
         <Route
           path="/tournaments/:id/manage"
           element={
-            <ProtectedRoute>
+            <RoleRoute allowedRoles={["organizer"]}>
               <TournamentManage />
-            </ProtectedRoute>
+            </RoleRoute>
           }
         />
 
         <Route
           path="/tournaments/create"
           element={
-            <ProtectedRoute>
+            <RoleRoute allowedRoles={["organizer"]}>
               <CreateTournament />
-            </ProtectedRoute>
+            </RoleRoute>
           }
         />
 
@@ -93,36 +94,36 @@ function App() {
         <Route
           path="/team-dashboard"
           element={
-            <ProtectedRoute>
+            <RoleRoute allowedRoles={["user"]}>
               <TeamDashboard />
-            </ProtectedRoute>
+            </RoleRoute>
           }
         />
 
         <Route
           path="/create-team"
           element={
-            <ProtectedRoute>
+            <RoleRoute allowedRoles={["user"]}>
               <CreateTeam />
-            </ProtectedRoute>
+            </RoleRoute>
           }
         />
 
         <Route
           path="/team/:id"
           element={
-            <ProtectedRoute>
+            <RoleRoute allowedRoles={["user"]}>
               <TeamManager />
-            </ProtectedRoute>
+            </RoleRoute>
           }
         />
 
         <Route
           path="/join-tournament/:teamId"
           element={
-            <ProtectedRoute>
+            <RoleRoute allowedRoles={["user"]}>
               <JoinTournament />
-            </ProtectedRoute>
+            </RoleRoute>
           }
         />
 
@@ -131,9 +132,9 @@ function App() {
         <Route
           path="/matches/:id/update"
           element={
-            <ProtectedRoute>
+            <RoleRoute allowedRoles={["organizer"]}>
               <UpdateMatchResult />
-            </ProtectedRoute>
+            </RoleRoute>
           }
         />
 

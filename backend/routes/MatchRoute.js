@@ -5,6 +5,7 @@ const Match = require("../models/MatchModel");
 const Tournament = require("../models/TournamentModel");
 
 const updatePointsTable = require("../services/PointService");
+const { getStageCounts } = require("../services/TournamentStageService");
 
 const protect = require("../middleware/authMiddleware");
 
@@ -17,7 +18,8 @@ router.get("/:id", protect, async (req, res) => {
 
         const match = await Match.findById(req.params.id)
             .populate("teamA", "name")
-            .populate("teamB", "name");
+            .populate("teamB", "name")
+            .populate("winningTeam", "name");
 
         if (!match) {
             return res.status(404).json({
@@ -48,7 +50,8 @@ router.get("/tournament/:id", async (req, res) => {
         })
             .populate("teamA", "name")
             .populate("teamB", "name")
-            .sort({ matchNumber: 1 });
+            .populate("winningTeam", "name")
+            .sort({ stageOrder: 1, matchNumber: 1 });
 
         res.status(200).json(matches);
 
@@ -127,9 +130,30 @@ router.post("/:id/update-result", protect, async (req, res) => {
             });
         }
 
+        if (match.round === "group" && tournament.semiFinalGenerated) {
+            return res.status(400).json({
+                message: "Reset semi finals before editing group stage results"
+            });
+        }
+
+        if (match.round === "semi_final" && tournament.finalGenerated) {
+            return res.status(400).json({
+                message: "Reset the final before editing semi final results"
+            });
+        }
+
         if (teamAOvers > match.overs || teamBOvers > match.overs) {
             return res.status(400).json({
                 message: "Put Correct data"
+            });
+        }
+
+        if (
+            (match.round === "semi_final" || match.round === "final") &&
+            teamARuns === teamBRuns
+        ) {
+            return res.status(400).json({
+                message: "Knockout matches must have a winner"
             });
         }
 
@@ -173,7 +197,33 @@ router.post("/:id/update-result", protect, async (req, res) => {
         let totalOvers = match.overs;
 
         await match.save();
-        await updatePointsTable(match, totalOvers);
+
+        if (match.round === "group") {
+            await updatePointsTable(match, totalOvers);
+
+            const groupStage = await getStageCounts(match.tournament, "group");
+
+            tournament.groupStageCompleted = groupStage.isComplete;
+
+            if (!tournament.semiFinalGenerated) {
+                tournament.currentStage = "group";
+            }
+        }
+
+        if (match.round === "semi_final") {
+            const semiFinalStage = await getStageCounts(match.tournament, "semi_final");
+            tournament.semiFinalCompleted = semiFinalStage.isComplete;
+        }
+
+        if (match.round === "final") {
+            tournament.winner = match.winningTeam;
+            tournament.currentStage = "completed";
+            tournament.status = "completed";
+            tournament.finalGenerated = true;
+        }
+
+        await tournament.save();
+
         res.status(200).json({
             message: "Match result updated successfully"
         });

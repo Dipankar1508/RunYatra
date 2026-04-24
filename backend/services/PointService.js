@@ -18,7 +18,8 @@ async function updatePointsTable(match, totalOvers) {
 
     const matches = await Match.find({
         tournament: tournamentId,
-        status: "completed"
+        status: "completed",
+        round: "group"
     });
 
     const table = {};

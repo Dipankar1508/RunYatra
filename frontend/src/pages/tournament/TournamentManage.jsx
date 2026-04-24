@@ -11,11 +11,15 @@ import CodesRules from "../rules/CodesRules";
 import TeamsRules from "../rules/TeamsRules";
 import MatchesRules from "../rules/MatchesRules";
 import PointsRules from "../rules/PointsRules";
-
-import EditIcon from "@mui/icons-material/Edit";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import AccessTimeIcon from "@mui/icons-material/AccessTime";
-import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
+import TournamentScheduleSection from "../../components/tournament/TournamentScheduleSection";
+import TournamentPointsTableCard from "../../components/tournament/TournamentPointsTableCard";
+import {
+  STAGE_ORDER,
+  formatStageName,
+  groupMatchesByRound,
+  isStageComplete,
+} from "../../utils/tournamentStages";
+import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 
 export default function TournamentManage() {
   const { id } = useParams();
@@ -208,6 +212,107 @@ export default function TournamentManage() {
   }
   if (!tournament) return <div className="p-6">Tournament not found</div>;
 
+  const groupedMatches = groupMatchesByRound(matches);
+  const groupCompleted = isStageComplete(groupedMatches.group);
+  const semiCompleted = isStageComplete(groupedMatches.semi_final);
+  const finalCompleted = isStageComplete(groupedMatches.final);
+  const canProceedToSemi =
+    tournament.scheduleGenerated &&
+    groupCompleted &&
+    !tournament.semiFinalGenerated;
+  const canProceedToFinal =
+    tournament.semiFinalGenerated &&
+    semiCompleted &&
+    !tournament.finalGenerated;
+  const canResetEntireSchedule = !tournament.semiFinalGenerated;
+  const canResetSemiFinal =
+    tournament.semiFinalGenerated && !tournament.finalGenerated;
+
+  const isResultLocked = (match) => {
+    if (match.round === "group" && tournament.semiFinalGenerated) {
+      return true;
+    }
+
+    if (match.round === "semi_final" && tournament.finalGenerated) {
+      return true;
+    }
+
+    return false;
+  };
+
+  const proceedToSemiFinal = async () => {
+    try {
+      await axios.post(
+        `${API_BASE_URL}/schedule/${id}/proceed-semi-final`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+
+      toast("Semi finals created", "success");
+      fetchTournament();
+      fetchMatches();
+    } catch (error) {
+      toast(
+        error.response?.data?.message || "Error creating semi final schedule",
+        "error",
+      );
+    }
+  };
+
+  const resetSemiFinal = async () => {
+    try {
+      await axios.post(
+        `${API_BASE_URL}/schedule/${id}/reset-semi-final`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+
+      toast("Semi final schedule reset", "success");
+      fetchTournament();
+      fetchMatches();
+    } catch (error) {
+      toast(
+        error.response?.data?.message || "Error resetting semi finals",
+        "error",
+      );
+    }
+  };
+
+  const proceedToFinal = async () => {
+    try {
+      await axios.post(
+        `${API_BASE_URL}/schedule/${id}/proceed-final`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+
+      toast("Final created", "success");
+      fetchTournament();
+      fetchMatches();
+    } catch (error) {
+      toast(
+        error.response?.data?.message || "Error creating final schedule",
+        "error",
+      );
+    }
+  };
+
+  const resetFinal = async () => {
+    try {
+      await axios.post(
+        `${API_BASE_URL}/schedule/${id}/reset-final`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+
+      toast("Final schedule reset", "success");
+      fetchTournament();
+      fetchMatches();
+    } catch (error) {
+      toast(error.response?.data?.message || "Error resetting final", "error");
+    }
+  };
+
   return (
     <div className="min-h-screen p-6 bg-gray-100 dark:bg-gray-900 text-black dark:text-white">
       <h1 className="text-3xl font-bold mb-6">{tournament.name}</h1>
@@ -342,6 +447,106 @@ export default function TournamentManage() {
                   <option value="completed">Completed</option>
                 </select>
               </div>
+            </div>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
+            <div className="rounded-2xl border border-purple-100 bg-gradient-to-br from-purple-50 via-white to-orange-50 p-5 dark:border-purple-900/60 dark:from-purple-950/40 dark:via-gray-800 dark:to-orange-950/20">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm uppercase tracking-[0.2em] text-purple-500 dark:text-purple-300">
+                    Tournament Flow
+                  </p>
+                  <h3 className="mt-2 text-xl font-semibold text-gray-900 dark:text-white">
+                    {formatStageName(tournament.currentStage)}
+                  </h3>
+                </div>
+
+                <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-purple-700 shadow-sm dark:bg-gray-900 dark:text-purple-300">
+                  {tournament.status.toUpperCase()}
+                </span>
+              </div>
+
+              <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                {[
+                  {
+                    label: "Group Stage",
+                    value: groupCompleted ? "Completed" : "In Progress",
+                  },
+                  {
+                    label: "Semi Final",
+                    value:
+                      groupedMatches.semi_final.length === 0
+                        ? "Waiting"
+                        : semiCompleted
+                          ? "Completed"
+                          : "In Progress",
+                  },
+                  {
+                    label: "Final",
+                    value:
+                      groupedMatches.final.length === 0
+                        ? "Waiting"
+                        : finalCompleted
+                          ? "Completed"
+                          : "In Progress",
+                  },
+                ].map((stage) => (
+                  <div
+                    key={stage.label}
+                    className="rounded-2xl border border-white/70 bg-white/90 p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900/60"
+                  >
+                    <p className="text-xs uppercase tracking-[0.16em] text-gray-500 dark:text-gray-400">
+                      {stage.label}
+                    </p>
+                    <p className="mt-2 text-base font-semibold text-gray-900 dark:text-white">
+                      {stage.value}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex h-full flex-col justify-between rounded-2xl border border-emerald-200/70 bg-gradient-to-br from-white via-emerald-50/70 to-orange-50/60 p-5 shadow-sm dark:border-emerald-900/50 dark:from-gray-900 dark:via-emerald-950/20 dark:to-orange-950/10">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-300">
+                    Tournament Winner
+                  </p>
+                  <h3 className="mt-2 text-xl font-semibold text-gray-900 dark:text-white">
+                    Champion
+                  </h3>
+                </div>
+
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500 text-white shadow-md">
+                  <EmojiEventsIcon sx={{ fontSize: 24 }} />
+                </div>
+              </div>
+
+              {tournament.winner ? (
+                <div className="mt-5 rounded-2xl border border-emerald-200 bg-white/90 p-5 text-emerald-900 shadow-sm dark:border-emerald-900/60 dark:bg-gray-900/70 dark:text-emerald-200">
+                  {/* <p className="text-xs uppercase tracking-[0.16em] text-emerald-600 dark:text-emerald-300">
+                    Confirmed Winner
+                  </p> */}
+                  <p className=" text-2xl font-bold sm:text-3xl">
+                    {tournament.winner.name}
+                  </p>
+                  <p className=" text-sm text-emerald-700/80 dark:text-emerald-200/70">
+                    This team has completed the tournament journey and currently
+                    holds the title.
+                  </p>
+                </div>
+              ) : (
+                <div className="mt-5 rounded-2xl border border-dashed border-gray-300 bg-white/60 p-5 dark:border-gray-700 dark:bg-gray-900/50">
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                    Champion not decided yet
+                  </p>
+                  <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                    The winner will appear here once the final is played and the
+                    result is submitted.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -495,163 +700,163 @@ export default function TournamentManage() {
 
       {tab === "matches" && (
         <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-xl">
-          <h2 className="text-2xl font-semibold mb-6">Tournament Schedule</h2>
+          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 className="text-2xl font-semibold">Tournament Schedule</h2>
+              {/* <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                Group generation stays exactly as before. Semi final and final
+                progression are manual organizer actions.
+              </p> */}
+            </div>
 
-          {/* Schedule Generator */}
+            <span className="rounded-full bg-purple-100 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-purple-700 dark:bg-purple-900/50 dark:text-purple-200">
+              {formatStageName(tournament.currentStage)}
+            </span>
+          </div>
 
           {!tournament.scheduleGenerated && (
-            <div className="flex flex-col sm:flex-row gap-3 mb-8">
-              <select
-                value={scheduleMode}
-                onChange={(e) => setScheduleMode(e.target.value)}
-                className="p-2 rounded-md border dark:bg-gray-700"
-              >
-                <option value="">Select Mode</option>
-                <option value="one_to_one">One vs One</option>
-                <option value="one_to_two">One vs Two</option>
-                <option value="one_to_three">One vs Three</option>
-                <option value="one_to_half">Half Teams</option>
-                <option value="one_to_all">Round Robin</option>
-              </select>
+            <div className="mb-8 rounded-2xl border border-purple-100 bg-gradient-to-br from-purple-50 to-orange-50 p-5 dark:border-purple-900/40 dark:from-gray-900 dark:to-purple-950/30">
+              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                Group Stage Generator
+              </p>
 
-              <button
-                onClick={generateSchedule}
-                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 transition text-white rounded-md"
-              >
-                Generate Schedule
-              </button>
+              <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+                <select
+                  value={scheduleMode}
+                  onChange={(e) => setScheduleMode(e.target.value)}
+                  className="rounded-xl border border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800"
+                >
+                  <option value="">Select Mode</option>
+                  <option value="one_to_one">One vs One</option>
+                  <option value="one_to_two">One vs Two</option>
+                  <option value="one_to_three">One vs Three</option>
+                  <option value="one_to_half">Half Teams</option>
+                  <option value="one_to_all">Round Robin</option>
+                </select>
+
+                <button
+                  onClick={generateSchedule}
+                  className="rounded-xl bg-purple-600 px-5 py-3 text-white transition hover:bg-purple-700"
+                >
+                  Generate Group Schedule
+                </button>
+              </div>
             </div>
           )}
 
-          {/* Matches */}
+          {tournament.scheduleGenerated && (
+            <div className="mb-8 grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+              <div className="rounded-2xl border border-gray-200 bg-gray-50/70 p-5 dark:border-gray-700 dark:bg-gray-900/50">
+                <p className="text-sm uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">
+                  Stage Checks
+                </p>
+                <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                  {[
+                    {
+                      label: "Group Completed",
+                      value: groupCompleted ? "Yes" : "No",
+                    },
+                    {
+                      label: "Semi Completed",
+                      value: semiCompleted ? "Yes" : "No",
+                    },
+                    {
+                      label: "Final Created",
+                      value: tournament.finalGenerated ? "Yes" : "No",
+                    },
+                  ].map((item) => (
+                    <div
+                      key={item.label}
+                      className="rounded-2xl bg-white p-4 shadow-sm dark:bg-gray-800"
+                    >
+                      <p className="text-xs uppercase tracking-[0.14em] text-gray-500 dark:text-gray-400">
+                        {item.label}
+                      </p>
+                      <p className="mt-2 text-lg font-semibold text-gray-900 dark:text-white">
+                        {item.value}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-purple-100 bg-gradient-to-br from-purple-50 to-white p-5 dark:border-purple-900/40 dark:from-purple-950/20 dark:to-gray-900">
+                <p className="text-sm uppercase tracking-[0.2em] text-purple-500 dark:text-purple-300">
+                  Organizer Controls
+                </p>
+
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <button
+                    onClick={resetSchedule}
+                    disabled={!canResetEntireSchedule}
+                    className={`w-full rounded-xl px-4 py-3 text-sm font-semibold text-white transition ${
+                      canResetEntireSchedule
+                        ? "bg-gray-900 hover:bg-black dark:bg-gray-700 dark:hover:bg-gray-600"
+                        : "cursor-not-allowed bg-gray-400 dark:bg-gray-600"
+                    }`}
+                  >
+                    Reset Entire Schedule
+                  </button>
+
+                  {canProceedToSemi && (
+                    <button
+                      onClick={proceedToSemiFinal}
+                      className="w-full rounded-xl bg-purple-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-purple-700"
+                    >
+                      Proceed To Semi Final
+                    </button>
+                  )}
+
+                  {tournament.semiFinalGenerated && (
+                    <button
+                      onClick={resetSemiFinal}
+                      disabled={!canResetSemiFinal}
+                      className={`w-full rounded-xl px-4 py-3 text-sm font-semibold text-white transition ${
+                        canResetSemiFinal
+                          ? "bg-orange-500 hover:bg-orange-600"
+                          : "cursor-not-allowed bg-gray-400 dark:bg-gray-600"
+                      }`}
+                    >
+                      Reset Semi Final
+                    </button>
+                  )}
+
+                  {canProceedToFinal && (
+                    <button
+                      onClick={proceedToFinal}
+                      className="w-full rounded-xl bg-purple-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-purple-800"
+                    >
+                      Proceed To Final
+                    </button>
+                  )}
+
+                  {tournament.finalGenerated && (
+                    <button
+                      onClick={resetFinal}
+                      className="w-full rounded-xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-orange-600"
+                    >
+                      Reset Final
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           {matches.length === 0 ? (
             <p className="text-gray-500">No matches generated yet</p>
           ) : (
             <div className="space-y-6">
-              {matches.map((match) => (
-                <div
-                  key={match._id}
-                  className="
-                    rounded-xl
-                    border border-gray-200 dark:border-gray-700
-                    bg-white dark:bg-gray-800
-                    p-5
-                    shadow-md hover:shadow-lg
-                    transition-all
-                    "
-                >
-                  {/* Top Control Bar */}
-
-                  <div className="flex items-center justify-between mb-5">
-                    <span className="text-xs sm:text-sm font-semibold text-gray-500 dark:text-gray-400">
-                      Match {match.matchNumber}
-                    </span>
-
-                    <div className="flex items-center gap-2">
-                      {/* Status */}
-
-                      <span
-                        className={`flex items-center justify-center gap-1
-                        h-8 px-3 text-xs font-semibold rounded-md
-                        ${
-                          match.status === "completed"
-                            ? "bg-green-500 text-white"
-                            : match.status === "live"
-                              ? "bg-yellow-400 text-black"
-                              : "bg-blue-500 text-white"
-                        }`}
-                      >
-                        {match.status === "completed" && (
-                          <CheckCircleIcon sx={{ fontSize: 16 }} />
-                        )}
-
-                        {match.status === "live" && (
-                          <FiberManualRecordIcon sx={{ fontSize: 14 }} />
-                        )}
-
-                        {match.status === "scheduled" && (
-                          <AccessTimeIcon sx={{ fontSize: 16 }} />
-                        )}
-
-                        <span className="hidden sm:inline">
-                          {match.status.toUpperCase()}
-                        </span>
-                      </span>
-
-                      {/* Update */}
-
-                      <button
-                        onClick={() => updateResult(match._id)}
-                        className="
-                        flex items-center justify-center
-                        h-8 px-3
-                        rounded-md
-                        bg-indigo-600 hover:bg-indigo-700
-                        text-white
-                        transition
-                        "
-                      >
-                        <EditIcon sx={{ fontSize: 18 }} />
-
-                        <span className="hidden sm:inline ml-1 text-xs">
-                          Update Result
-                        </span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Teams Section */}
-
-                  <div className="grid grid-cols-3 items-center text-center gap-2">
-                    {/* Team A */}
-
-                    <div className="flex flex-col items-center justify-center">
-                      <div className="hidden sm:flex w-12 h-12 items-center justify-center rounded-full bg-indigo-600 text-white font-bold text-lg">
-                        {match.teamA?.name?.[0]}
-                      </div>
-
-                      <p className="mt-2 text-sm sm:text-base font-semibold leading-tight">
-                        {match.teamA?.name}
-                      </p>
-                    </div>
-
-                    {/* VS */}
-
-                    <div className="flex justify-center items-center">
-                      <span className="text-purple-600 font-bold text-lg sm:text-xl">
-                        VS
-                      </span>
-                    </div>
-
-                    {/* Team B */}
-
-                    <div className="flex flex-col items-center justify-center">
-                      <div className="hidden sm:flex w-12 h-12 items-center justify-center rounded-full bg-indigo-600 text-white font-bold text-lg">
-                        {match.teamB?.name?.[0]}
-                      </div>
-
-                      <p className="mt-2 text-sm sm:text-base font-semibold leading-tight max-w-30 wrap-break-words">
-                        {match.teamB?.name}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+              {STAGE_ORDER.map((round) => (
+                <TournamentScheduleSection
+                  key={round}
+                  round={round}
+                  matches={groupedMatches[round]}
+                  canUpdate
+                  onUpdateResult={updateResult}
+                  isUpdateDisabled={isResultLocked}
+                />
               ))}
-            </div>
-          )}
-
-          {/* Reset Schedule at bottom */}
-
-          {tournament.scheduleGenerated && (
-            <div className="mt-8 flex justify-start">
-              <button
-                onClick={resetSchedule}
-                className="px-5 py-2 bg-orange-500 hover:bg-orange-600
-          text-white rounded-md transition"
-              >
-                Reset Schedule
-              </button>
             </div>
           )}
 
@@ -662,77 +867,8 @@ export default function TournamentManage() {
       {/* Points Table */}
 
       {tab === "points" && (
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-lg">
-          <h2 className="text-lg mb-3 font-semibold text-gray-800 dark:text-gray-100">
-            Points Table
-          </h2>
-
-          {pointsTable.length === 0 ? (
-            <p className="text-gray-500">No data yet</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[330px] border-collapse text-xs sm:text-sm">
-                {/* Header */}
-                <thead>
-                  <tr className="bg-purple-600 text-white">
-                    <th className="px-2 py-2 text-left">Team</th>
-                    <th className="px-2 py-2 text-center">P</th>
-                    <th className="px-2 py-2 text-center">W</th>
-                    <th className="px-2 py-2 text-center">L</th>
-                    <th className="px-2 py-2 text-center">Pts</th>
-                    <th className="px-2 py-2 text-center">NRR</th>
-                  </tr>
-                </thead>
-
-                {/* Body */}
-                <tbody>
-                  {pointsTable.map((team, index) => (
-                    <tr
-                      key={team._id}
-                      className={`
-                  border-b
-                  hover:bg-purple-50
-                  dark:hover:bg-gray-700
-                  ${
-                    index % 2 === 0
-                      ? "bg-gray-50 dark:bg-gray-900"
-                      : "bg-white dark:bg-gray-800"
-                  }
-                `}
-                    >
-                      <td className="px-2 py-2 font-medium">
-                        {index + 1}. {team.team?.name}
-                      </td>
-
-                      <td className="px-2 py-2 text-center">{team.played}</td>
-
-                      <td className="px-2 py-2 text-center text-green-600 font-semibold">
-                        {team.won}
-                      </td>
-
-                      <td className="px-2 py-2 text-center text-red-500">
-                        {team.lost}
-                      </td>
-
-                      <td className="px-2 py-2 text-center font-bold text-purple-600">
-                        {team.points}
-                      </td>
-
-                      <td
-                        className={`px-2 py-2 text-center font-semibold ${
-                          team.netrunrate >= 0
-                            ? "text-green-600"
-                            : "text-red-500"
-                        }`}
-                      >
-                        {team.netrunrate}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+        <div className="space-y-4">
+          <TournamentPointsTableCard pointsTable={pointsTable} />
           <PointsRules />
         </div>
       )}

@@ -27,6 +27,16 @@ const matchSchema = new mongoose.Schema({
         default: "group"
     },
 
+    slotLabel: {
+        type: String,
+        trim: true
+    },
+
+    stageOrder: {
+        type: Number,
+        default: 1
+    },
+
     overs: {
         type: Number,
         default: 20

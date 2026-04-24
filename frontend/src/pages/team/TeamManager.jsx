@@ -10,11 +10,10 @@ import TeamOverviewInfo from "./TeamOverviewInfo";
 import TeamOverViewRules from "../rules/TeamOverViewRules";
 import AddPlayerRules from "../rules/AddPlayerRules";
 import LoadingScreen from "../../components/LoadingScreen";
+import TournamentScheduleSection from "../../components/tournament/TournamentScheduleSection";
+import { STAGE_ORDER, groupMatchesByRound } from "../../utils/tournamentStages";
 
 import EditIcon from "@mui/icons-material/Edit";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import AccessTimeIcon from "@mui/icons-material/AccessTime";
-import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 
 export default function TeamManager() {
   const { id } = useParams();
@@ -209,6 +208,8 @@ export default function TeamManager() {
     return <LoadingScreen item="Dashboard" />;
   }
 
+  const groupedMatches = groupMatchesByRound(matches);
+
   return (
     <div className="min-h-screen p-6 bg-gray-100 dark:bg-gray-900">
       {/* HEADER */}
@@ -218,12 +219,14 @@ export default function TeamManager() {
           {team.name}
         </h1>
 
-        <button
-          onClick={() => setShowDeleteConfirm(true)}
-          className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded"
-        >
-          <DeleteIcon />
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded"
+          >
+            <DeleteIcon />
+          </button>
+        </div>
       </div>
 
       {/* TAB SYSTEM */}
@@ -425,102 +428,24 @@ export default function TeamManager() {
 
       {tab === "schedule" && (
         <div className="bg-white dark:bg-gray-800 dark:text-white p-6 rounded-xl shadow-xl ">
-          <h2 className="text-2xl font-semibold mb-6">Tournament Schedule</h2>
-
-          {/* Matches */}
+          <div className="mb-6">
+            <h2 className="text-2xl font-semibold">Tournament Schedule</h2>
+            {/* <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+              Matches are grouped stage-by-stage so your team can quickly see
+              group matches, semi finals, and the final separately.
+            </p> */}
+          </div>
 
           {matches.length === 0 ? (
             <p className="text-gray-500">No matches generated yet</p>
           ) : (
             <div className="space-y-6">
-              {matches.map((match) => (
-                <div
-                  key={match._id}
-                  className="
-                    rounded-xl
-                    border border-gray-200 dark:border-gray-700
-                    bg-white dark:bg-gray-800
-                    p-5
-                    shadow-md hover:shadow-lg
-                    transition-all
-                    "
-                >
-                  {/* Top Control Bar */}
-
-                  <div className="flex items-center justify-between mb-5">
-                    <span className="text-xs sm:text-sm font-semibold text-gray-500 dark:text-gray-400">
-                      Match {match.matchNumber}
-                    </span>
-
-                    <div className="flex items-center gap-2">
-                      {/* Status */}
-
-                      <span
-                        className={`flex items-center justify-center gap-1
-                        h-8 px-3 text-xs font-semibold rounded-md
-                        ${
-                          match.status === "completed"
-                            ? "bg-green-500 text-white"
-                            : match.status === "live"
-                              ? "bg-yellow-400 text-black"
-                              : "bg-blue-500 text-white"
-                        }`}
-                      >
-                        {match.status === "completed" && (
-                          <CheckCircleIcon sx={{ fontSize: 16 }} />
-                        )}
-
-                        {match.status === "live" && (
-                          <FiberManualRecordIcon sx={{ fontSize: 14 }} />
-                        )}
-
-                        {match.status === "scheduled" && (
-                          <AccessTimeIcon sx={{ fontSize: 16 }} />
-                        )}
-
-                        <span className="hidden sm:inline">
-                          {match.status.toUpperCase()}
-                        </span>
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Teams Section */}
-
-                  <div className="grid grid-cols-3 items-center text-center gap-2">
-                    {/* Team A */}
-
-                    <div className="flex flex-col items-center justify-center">
-                      <div className="hidden sm:flex w-12 h-12 items-center justify-center rounded-full bg-indigo-600 text-white font-bold text-lg">
-                        {match.teamA?.name?.[0]}
-                      </div>
-
-                      <p className="mt-2 text-sm sm:text-base font-semibold leading-tight">
-                        {match.teamA?.name}
-                      </p>
-                    </div>
-
-                    {/* VS */}
-
-                    <div className="flex justify-center items-center">
-                      <span className="text-purple-600 font-bold text-lg sm:text-xl">
-                        VS
-                      </span>
-                    </div>
-
-                    {/* Team B */}
-
-                    <div className="flex flex-col items-center justify-center">
-                      <div className="hidden sm:flex w-12 h-12 items-center justify-center rounded-full bg-indigo-600 text-white font-bold text-lg">
-                        {match.teamB?.name?.[0]}
-                      </div>
-
-                      <p className="mt-2 text-sm sm:text-base font-semibold leading-tight max-w-30 wrap-break-words">
-                        {match.teamB?.name}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+              {STAGE_ORDER.map((round) => (
+                <TournamentScheduleSection
+                  key={round}
+                  round={round}
+                  matches={groupedMatches[round]}
+                />
               ))}
             </div>
           )}

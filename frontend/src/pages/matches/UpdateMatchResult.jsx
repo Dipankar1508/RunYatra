@@ -77,6 +77,12 @@ export default function UpdateMatchResult() {
           </p>
 
           <p className="text-xs text-gray-400 mt-1">Max Overs: {totalOvers}</p>
+
+          {(match.round === "semi_final" || match.round === "final") && (
+            <p className="mt-2 text-xs font-medium text-rose-500">
+              Knockout matches must produce a winner. Draws are not allowed here.
+            </p>
+          )}
         </div>
 
         {/* Team A */}

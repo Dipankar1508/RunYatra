@@ -122,6 +122,7 @@ router.get("/organizer/:id", protect, async (req, res) => {
 router.get("/search/:id", async (req, res) => {
     try {
         const tournament = await Tournament.findById(req.params.id)
+            .populate("winner", "name")
             .populate({
                 path: "teams",
                 populate: {
