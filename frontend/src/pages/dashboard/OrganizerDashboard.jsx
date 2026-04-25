@@ -4,6 +4,9 @@ import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../../utils/Config";
 import axios from "axios";
 import LoadingScreen from "../../components/LoadingScreen";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
+import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import SettingsIcon from "@mui/icons-material/Settings";
 
 export default function OrganizerDashboard() {
   const { user } = useAuth();
@@ -85,73 +88,96 @@ export default function OrganizerDashboard() {
             return (
               <div
                 key={t._id}
-                className="p-5 rounded-xl shadow-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition"
+                className="group relative overflow-hidden rounded-2xl transition-all duration-300
+                bg-white dark:bg-slate-800
+                border border-gray-200 dark:border-white/10
+                shadow-md hover:shadow-xl"
               >
-                {/* Tournament Name */}
-                <h3 className="text-xl font-bold mb-2">{t.name}</h3>
+                {/* TOP ACCENT */}
+                <div className="h-1 bg-gradient-to-r from-orange-400 to-purple-700" />
 
-                {/* Location */}
-                <p className="text-sm text-gray-500 mb-1">📍 {t.location}</p>
+                <div className="p-5">
+                  {/* HEADER */}
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                        {t.name}
+                      </h3>
 
-                {/* Dates */}
-                <p className="text-sm text-gray-500 mb-3">
-                  📅 {new Date(t.startDate).toLocaleDateString("en-GB")} —{" "}
-                  {new Date(t.endDate).toLocaleDateString("en-GB")}
-                </p>
+                      <div className="mt-1 flex items-center gap-1 text-sm text-gray-500 dark:text-slate-200 font-semibold">
+                        <LocationOnIcon sx={{ fontSize: 20 }} />
+                        {t.location}
+                      </div>
+                    </div>
 
-                {/* Status Badge */}
-                <span
-                  className={`px-3 py-1 text-xs rounded-full mb-3 inline-block
+                    {/* STATUS BADGE */}
+                    <span
+                      className={`px-3 py-1 text-xs rounded-full font-semibold
         ${
           t.status === "upcoming"
-            ? "bg-blue-100 text-blue-600"
+            ? "bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-300"
             : t.status === "ongoing"
-              ? "bg-green-100 text-green-600"
-              : "bg-gray-200 text-gray-600"
+              ? "bg-green-100 text-green-600 dark:bg-green-500/20 dark:text-green-300"
+              : "bg-gray-200 text-gray-600 dark:bg-gray-500/20 dark:text-gray-300"
         }`}
-                >
-                  {t.status}
-                </span>
-
-                {/* Tournament Stats */}
-                <div className="grid grid-cols-2 gap-2 text-sm mb-4">
-                  <p>
-                    👥 Teams:{" "}
-                    <span className="font-semibold">
-                      {t.teams.length}/{t.rules.maxTeams}
+                    >
+                      {t.status}
                     </span>
-                  </p>
+                  </div>
 
-                  <p>
-                    🏏 Overs:{" "}
-                    <span className="font-semibold">
-                      {t.rules.oversPerMatch}
-                    </span>
-                  </p>
+                  {/* DATE */}
+                  <div className="mt-3 flex items-center gap-2 text-sm text-gray-500 dark:text-slate-200 font-semibold">
+                    <CalendarTodayIcon sx={{ fontSize: 16 }} />
+                    {new Date(t.startDate).toLocaleDateString("en-GB")} —
+                    {new Date(t.endDate).toLocaleDateString("en-GB")}
+                  </div>
 
-                  <p>
-                    👤 Players/Team:{" "}
-                    <span className="font-semibold">
-                      {t.rules.playersPerTeam}
-                    </span>
-                  </p>
+                  {/* STATS BLOCK */}
+                  <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
+                    <div className="p-3 rounded-xl bg-gray-100 dark:bg-slate-900">
+                      <p className="text-gray-500 dark:text-slate-400">Teams</p>
+                      <p className="font-semibold text-gray-900 dark:text-white">
+                        {t.teams.length}/{t.rules.maxTeams}
+                      </p>
+                    </div>
 
-                  <p>
-                    🔑 Join Codes:{" "}
-                    <span className="font-semibold">
-                      {usedCodes}/{totalCodes}
-                    </span>
-                  </p>
-                </div>
+                    <div className="p-3 rounded-xl bg-gray-100 dark:bg-slate-900">
+                      <p className="text-gray-500 dark:text-slate-400">Overs</p>
+                      <p className="font-semibold text-gray-900 dark:text-white">
+                        {t.rules.oversPerMatch}
+                      </p>
+                    </div>
 
-                {/* Action Buttons */}
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleManager(t._id)}
-                    className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg"
-                  >
-                    Manage
-                  </button>
+                    <div className="p-3 rounded-xl bg-gray-100 dark:bg-slate-900">
+                      <p className="text-gray-500 dark:text-slate-400">
+                        Players
+                      </p>
+                      <p className="font-semibold text-gray-900 dark:text-white">
+                        {t.rules.playersPerTeam}
+                      </p>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-gray-100 dark:bg-slate-900">
+                      <p className="text-gray-500 dark:text-slate-400">
+                        Join Codes
+                      </p>
+                      <p className="font-semibold text-gray-900 dark:text-white">
+                        {usedCodes}/{totalCodes}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* ACTION */}
+                  <div className="mt-6">
+                    <button
+                      onClick={() => handleManager(t._id)}
+                      className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-400 hover:to-orange-500 
+                      dark:from-purple-500 dark:to-purple-600 dark:hover:from-purple-400 dark:hover:to-purple-500
+                      text-white shadow-md transition"
+                    >
+                      <SettingsIcon sx={{ fontSize: 18 }} /> Manage
+                    </button>
+                  </div>
                 </div>
               </div>
             );

@@ -55,7 +55,7 @@ export default function TournamentManage() {
   const fetchTournament = async () => {
     try {
       const res = await axios.get(`${API_BASE_URL}/tournaments/search/${id}`);
-      console.log(res.data);
+      // console.log(res.data);
       setTournament(res.data);
       fetchMatches();
       fetchPointsTable();

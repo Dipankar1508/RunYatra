@@ -5,9 +5,11 @@ import {
   Leaderboard,
   AddCircle,
   Login,
+  ArrowOutward,
 } from "@mui/icons-material";
+import { motion } from "framer-motion";
 
-function HowItWorks() {
+function HowItWorks({ onOrganizerAction, onTeamAction }) {
   const organizerSteps = [
     {
       icon: <AddCircle fontSize="large" />,
@@ -55,67 +57,108 @@ function HowItWorks() {
   ];
 
   return (
-    <section className="py-24 bg-green-300 dark:bg-gray-900">
-      {" "}
-      {/* Title */}
-      <div className="text-center mb-16">
-        <h2 className="text-4xl font-bold text-gray-800 dark:text-white">
-          How RunYatra Works
-        </h2>
-
-        <p className="text-gray-500 mt-4">
-          A simple workflow for organizers and teams to run cricket tournaments
-          smoothly.
-        </p>
-      </div>
-      {/* Organizer Section */}
-      <div className="max-w-6xl mx-auto mb-16 px-6">
-        <h3 className="text-2xl font-semibold mb-8 text-green-700 text-center">
-          For Tournament Organizers
-        </h3>
-
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {organizerSteps.map((step, i) => (
-            <div
-              key={i}
-              className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md hover:shadow-xl transition"
-            >
-              <div className="text-green-700 mb-4">{step.icon}</div>
-
-              <h4 className="dark:text-white font-semibold text-lg">
-                {step.title}
-              </h4>
-
-              <p className="text-gray-600 dark:text-gray-300 text-sm mt-2">
-                {step.desc}
-              </p>
-            </div>
-          ))}
+    <section className="px-6 py-24">
+      <div className="mx-auto max-w-7xl">
+        <div className="text-center">
+          <p className="text-sm font-semibold uppercase tracking-[0.24em] text-purple-300">
+            Workflow
+          </p>
+          <h2 className="mt-4 text-4xl font-black tracking-[-0.03em] text-white md:text-5xl">
+            A split experience for organizers and teams, without confusion.
+          </h2>
+          <p className="mx-auto mt-5 max-w-3xl text-base leading-8 text-slate-300 md:text-lg">
+            The product works best when organizers get command over the
+            tournament and teams get a clean, read-only way to follow what’s
+            happening.
+          </p>
         </div>
-      </div>
-      {/* Player / Team Section */}
-      <div className="max-w-6xl mx-auto px-6">
-        <h3 className="text-2xl font-semibold mb-8 text-orange-600 text-center">
-          For Teams & Players
-        </h3>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {teamSteps.map((step, i) => (
-            <div
-              key={i}
-              className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md hover:shadow-xl transition"
-            >
-              <div className="text-orange-500 mb-4">{step.icon}</div>
-
-              <h4 className="dark:text-white font-semibold text-lg">
-                {step.title}
-              </h4>
-
-              <p className="text-gray-600 dark:text-gray-300 text-sm mt-2">
-                {step.desc}
-              </p>
+        <div className="mt-16 grid gap-8 xl:grid-cols-2">
+          <div className="landing-glass rounded-[28px] p-6">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-orange-300">
+                  For Organizers
+                </p>
+                <h3 className="mt-3 text-3xl font-bold text-white">
+                  Control the tournament like a match director.
+                </h3>
+              </div>
+              <button
+                onClick={onOrganizerAction}
+                className="hidden rounded-xl bg-orange-500 px-4 py-3 text-xs font-bold uppercase tracking-[0.18em] text-white transition hover:bg-orange-400 md:inline-flex md:items-center md:gap-2"
+              >
+                Start Here
+                <ArrowOutward sx={{ fontSize: 16 }} />
+              </button>
             </div>
-          ))}
+
+            <div className="mt-8 grid gap-4 md:grid-cols-2">
+              {organizerSteps.map((step, i) => (
+                <motion.div
+                  key={step.title}
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.25 }}
+                  transition={{ duration: 0.35, delay: i * 0.06 }}
+                  className="landing-panel rounded-2xl p-5"
+                >
+                  <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-500/15 text-orange-300">
+                    {step.icon}
+                  </div>
+                  <h4 className="text-xl font-semibold text-white">
+                    {step.title}
+                  </h4>
+                  <p className="mt-3 text-sm leading-7 text-slate-300">
+                    {step.desc}
+                  </p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+
+          <div className="landing-glass rounded-[28px] p-6">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-purple-300">
+                  For Teams
+                </p>
+                <h3 className="mt-3 text-3xl font-bold text-white">
+                  Join, play, and track progress without extra friction.
+                </h3>
+              </div>
+              <button
+                onClick={onTeamAction}
+                className="hidden rounded-xl bg-purple-600 px-4 py-3 text-xs font-bold uppercase tracking-[0.18em] text-white transition hover:bg-purple-500 md:inline-flex md:items-center md:gap-2"
+              >
+                Join Flow
+                <ArrowOutward sx={{ fontSize: 16 }} />
+              </button>
+            </div>
+
+            <div className="mt-8 grid gap-4 md:grid-cols-2">
+              {teamSteps.map((step, i) => (
+                <motion.div
+                  key={step.title}
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.25 }}
+                  transition={{ duration: 0.35, delay: i * 0.06 }}
+                  className="landing-panel rounded-2xl p-5"
+                >
+                  <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-500/15 text-purple-200">
+                    {step.icon}
+                  </div>
+                  <h4 className="text-xl font-semibold text-white">
+                    {step.title}
+                  </h4>
+                  <p className="mt-3 text-sm leading-7 text-slate-300">
+                    {step.desc}
+                  </p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </section>

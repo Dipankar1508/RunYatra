@@ -1,0 +1,67 @@
+.landing-shell {
+  background:
+    radial-gradient(circle at top, rgba(124, 58, 237, 0.18), transparent 32%),
+    radial-gradient(circle at 80% 20%, rgba(249, 115, 22, 0.14), transparent 28%),
+    linear-gradient(180deg, #050811 0%, #090d18 38%, #06080f 100%);
+  color: #f8fafc;
+}
+
+.landing-glass {
+  background: rgba(15, 23, 42, 0.62);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 18px 45px rgba(2, 6, 23, 0.45);
+}
+
+.landing-panel {
+  background:
+    linear-gradient(135deg, rgba(15, 23, 42, 0.88), rgba(17, 24, 39, 0.7)),
+    radial-gradient(circle at top left, rgba(124, 58, 237, 0.18), transparent 38%);
+  border: 1px solid rgba(168, 85, 247, 0.18);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 16px 40px rgba(15, 23, 42, 0.35);
+}
+
+.landing-panel:hover {
+  border-color: rgba(249, 115, 22, 0.34);
+  transform: translateY(-4px);
+}
+
+.cta-glass {
+  background:
+    linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(17, 24, 39, 0.72)),
+    radial-gradient(circle at top right, rgba(249, 115, 22, 0.18), transparent 34%);
+  backdrop-filter: blur(18px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 24px 60px rgba(2, 6, 23, 0.42);
+}
+
+.landing-hero-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.95), transparent 92%);
+}
+
+.landing-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.landing-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, 0.12) 40%, transparent 80%);
+  transform: translateX(-120%);
+  transition: transform 0.8s ease;
+}
+
+.landing-shimmer:hover::after {
+  transform: translateX(120%);
+}
